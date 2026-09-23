@@ -1,4 +1,4 @@
-# Guard AI — Quality Assurance & Test Engineering Platform
+# NewsQA — Journalism Content Quality & Testing Platform
 
 Guard AI is an enterprise-grade QA management and automation platform designed specifically for newsrooms, editorial teams, software developers, and media organizations. By combining manual test engineering, automated REST API testing, UI test suite monitoring, bug lifecycle tracking, and **Google Gemini AI-powered automated test generation**, Guard AI closes the loop on quality assurance for digital publishing platforms.
 
