@@ -1,3 +1,161 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+
+:root {
+  /* User 9-Color Design System */
+  --canvas-bg: #070f1e;        /* Deep Abyssal Blue - Primary page base, main backdrop */
+  --card-bg: #0d1b2a;          /* Midnight Ocean Navy - Project containers, test-runner cards */
+  --surface-elevate: #13253b;  /* Dark Oceanic Slate - Code blocks, input fields, active rows */
+  --card-border: #1e3a5f;      /* Muted Subsea Line - 1px clean card/table borders */
+  --text-primary: #e2f1ff;     /* Ice White - Headers and high-contrast title text */
+  --text-secondary: #88a4c4;   /* Submerged Mist - Body descriptions, metadata, logs */
+  --text-muted: #88a4c4;
+  --accent-primary: #00e676;   /* Bioluminescent Green - Test passed indicators, main CTAs, active states */
+  --accent-secondary: #00e5ff; /* Cyan Sonar - API tags, links, system status indicators */
+  --alert-highlight: #ff9100;  /* Neon Coral Amber - Open defects, warning badges, metrics */
+  --rose-red: #ff3366;         /* Critical alert / Failed state */
+
+  /* Structural Bindings */
+  --sidebar-bg: #070f1e;
+  --sidebar-hover: #13253b;
+  --sidebar-active: #00e676;
+  --sidebar-text: #88a4c4;
+  --sidebar-text-active: #e2f1ff;
+  --sidebar-border: #1e3a5f;
+
+  --accent: #00e676;
+  --accent-hover: #00c853;
+  --content-bg: #070f1e;
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+
+  /* Badge Custom Variables */
+  --badge-passed-bg: rgba(0, 230, 118, 0.16);
+  --badge-passed-text: #00e676;
+  --badge-failed-bg: rgba(255, 51, 102, 0.16);
+  --badge-failed-text: #ff6688;
+  --badge-blocked-bg: rgba(255, 145, 0, 0.16);
+  --badge-blocked-text: #ff9100;
+  --badge-draft-bg: rgba(0, 229, 255, 0.16);
+  --badge-draft-text: #00e5ff;
+  --badge-ready-bg: rgba(0, 229, 255, 0.16);
+  --badge-ready-text: #00e5ff;
+  --badge-critical-bg: rgba(255, 51, 102, 0.2);
+  --badge-critical-text: #ff3366;
+  --badge-high-bg: rgba(255, 145, 0, 0.18);
+  --badge-high-text: #ff9100;
+  --badge-medium-bg: rgba(0, 229, 255, 0.16);
+  --badge-medium-text: #00e5ff;
+  --badge-low-bg: #13253b;
+  --badge-low-text: #88a4c4;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  background: var(--canvas-bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #070f1e; }
+::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #00e676; }
+
+/* Badge utilities */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.badge-passed  { background: var(--badge-passed-bg);   color: var(--badge-passed-text); border: 1px solid rgba(0, 230, 118, 0.35); }
+.badge-failed  { background: var(--badge-failed-bg);   color: var(--badge-failed-text); border: 1px solid rgba(255, 51, 102, 0.35); }
+.badge-blocked { background: var(--badge-blocked-bg);  color: var(--badge-blocked-text); border: 1px solid rgba(255, 145, 0, 0.35); }
+.badge-draft   { background: var(--badge-draft-bg);    color: var(--badge-draft-text); border: 1px solid rgba(0, 229, 255, 0.35); }
+.badge-ready   { background: var(--badge-ready-bg);    color: var(--badge-ready-text); border: 1px solid rgba(0, 229, 255, 0.35); }
+.badge-critical{ background: var(--badge-critical-bg); color: var(--badge-critical-text); border: 1px solid rgba(255, 51, 102, 0.45); }
+.badge-high    { background: var(--badge-high-bg);     color: var(--badge-high-text); border: 1px solid rgba(255, 145, 0, 0.35); }
+.badge-medium  { background: var(--badge-medium-bg);   color: var(--badge-medium-text); border: 1px solid rgba(0, 229, 255, 0.35); }
+.badge-low     { background: var(--badge-low-bg);      color: var(--badge-low-text); border: 1px solid var(--card-border); }
+
+/* Table utilities */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #88a4c4;
+  background: #070f1e;
+  border-bottom: 1px solid var(--card-border);
+}
+.data-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid rgba(30, 58, 95, 0.6);
+  color: var(--text-primary);
+}
+.data-table tbody tr:hover { background: rgba(19, 37, 59, 0.7); }
+.data-table tbody tr:last-child td { border-bottom: none; }
+
+/* Card */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  color: var(--text-primary);
+}
+
+/* Stat card */
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  box-shadow: var(--card-shadow);
+  color: var(--text-primary);
+}
+
+/* Input base */
+.input-base {
+  border: 1px solid var(--card-border);
+  border-radius: 7px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  background: #13253b;
+  color: #e2f1ff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input-base:focus { border-color: #00e676; box-shadow: 0 0 0 3px rgba(0, 230, 118, 0.25); }
+
+/* Sidebar active link */
+.sidebar-link-active {
+  background: rgba(0, 230, 118, 0.14) !important;
+  color: #e2f1ff !important;
+  border-left: 3px solid #00e676;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.border-glow {
+  box-shadow: 0 0 30px -5px rgba(0, 230, 118, 0.3);
+}
