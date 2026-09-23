@@ -4,9 +4,10 @@ import { redirect } from "next/navigation";
 
 export default async function NewBugPage() {
   const user = await currentUser();
-  const role = user?.publicMetadata?.role as string;
+  const rawRole = (user?.publicMetadata?.role as string) || "GUEST";
+  const isQA = rawRole === "QA" || rawRole === "QA_ENGINEER";
   
-  if (role === "VIEWER") {
+  if (!isQA) {
     redirect("/dashboard/bugs");
   }
 

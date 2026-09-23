@@ -1,18 +1,23 @@
 # NewsQA — Journalism Content Quality & Testing Platform
 
-Guard AI is an enterprise-grade QA management and automation platform designed specifically for newsrooms, editorial teams, software developers, and media organizations. By combining manual test engineering, automated REST API testing, UI test suite monitoring, bug lifecycle tracking, and **Google Gemini AI-powered automated test generation**, Guard AI closes the loop on quality assurance for digital publishing platforms.
+NewsQA is an enterprise-grade QA management and automation platform designed specifically for newsrooms, editorial teams, software developers, and media organizations. By combining manual test engineering, automated REST API testing, UI test suite monitoring, bug lifecycle tracking, multi-format article export, and **Google Gemini AI-powered automated test generation**, NewsQA closes the loop on quality assurance for digital publishing platforms.
 
 ---
 
 ## 🌟 Key Platform Features
 
-### 1. 🤖 AI-Powered Test Case Generation (News Guard AI)
-- **Requirement-to-Test Generator**: Input feature specifications or user stories, and Guard AI (powered by Google Gemini 1.5 Pro & LangChain) automatically generates structured test cases with preconditions, step-by-step actions, expected results, and severity tags.
+### 1. 🤖 AI-Powered Test Case Generation (NewsQA AI)
+- **Requirement-to-Test Generator**: Input feature specifications or user stories, and NewsQA (powered by Google Gemini 1.5 Pro & LangChain) automatically generates structured test cases with preconditions, step-by-step actions, expected results, and severity tags.
 - **Direct Database Injection**: Save AI-suggested test cases directly into MongoDB with a single click.
 
-### 2. 📰 Editorial Article Quality Control & AI Fact-Checking
+### 2. 📰 Editorial Article Quality Control, PDF/DOCX Parsing & AI Grammar Audit
+- **PDF & DOCX Document Parser**: Upload `.pdf`, `.docx`, or `.txt` article files directly inside the editor. Automatically extracts raw text using `pdf-parse` and `mammoth`.
+- **AI Grammar & Quality Audit**: Evaluates articles for grammatical mistakes, spelling errors, tone, clarity, structure, and readability, returning an overall **Article Quality Score (0-100)**.
+- **1-Click Polished Version Injection**: Instantly populates title, category, and error-corrected article body text directly into the article form.
 - **Deterministic Validation Rules**: Automated real-time checks for mandatory metadata (Headline, Author, Category), word count thresholds, and external link validation.
 - **Live AI Fact-Checking**: Scans article text for factual claims, verifies them using live web search via Tavily AI, highlights inconsistencies, and calculates an **AI Probability Score**.
+- **Viewer Interactive Article Modal**: Viewers can click "Validate Article" to launch an interactive dialog displaying Article Title, Author Name, Category, Date, and scrollable Full Content.
+- **Multi-Format Export (.PDF, .DOCX, .TXT)**: Export published articles directly into formatted PDF documents, Microsoft Word `.docx` files, or plain text `.txt` files with 1 click.
 
 ### 3. ⚡ Interactive REST API Testing Suite
 - **In-Browser HTTP Client**: Execute `GET`, `POST`, `PUT`, `PATCH`, and `DELETE` requests directly from the dashboard.
@@ -22,8 +27,9 @@ Guard AI is an enterprise-grade QA management and automation platform designed s
 - **Suite Execution Tracker**: Monitor end-to-end Playwright UI test suite execution across multiple browser viewports.
 - **Pass/Fail Metrics**: Track individual test suite execution durations, last run timestamps, and suite stability.
 
-### 5. 🐛 Defect & Bug Tracking Lifecycle
-- **End-to-End Bug Workflow**: Log, assign, and track defects across `OPEN`, `IN_PROGRESS`, `FIXED`, and `VERIFIED` states.
+### 5. 🐛 QA Defect & Bug Tracking Lifecycle
+- **QA-Exclusive Defect Management**: Creating, editing, updating, and deleting bugs is strictly restricted to **QA Engineers** (`QA` / `QA_ENGINEER`).
+- **End-to-End Bug Workflow**: Log, assign, edit, and delete defects across `OPEN`, `IN_PROGRESS`, `FIXED`, and `VERIFIED` states.
 - **Severity & Priority Tagging**: Categorize issues by `LOW`, `MEDIUM`, `HIGH`, and `CRITICAL` severity with environment tags (Production, Staging, QA).
 
 ### 6. 📊 Executive Quality Reports & Analytics
@@ -35,23 +41,23 @@ Guard AI is an enterprise-grade QA management and automation platform designed s
 
 ## 🔐 Role-Based Access Control (RBAC)
 
-Guard AI enforces strict security policies managed via **Clerk Authentication**. Capabilities are scoped dynamically by user role:
+NewsQA enforces strict security policies managed via **Clerk Authentication**. Capabilities are scoped dynamically by user role:
 
 | Feature / Action | QA | Editor | Admin | Viewer |
 | :--- | :---: | :---: | :---: | :---: |
-| **Create & Edit Test Cases** | ✅ | ❌ | ✅ | ❌ |
-| **Delete Test Cases** | ✅ | ❌ | ✅ | ❌ |
-| **Execute Test Runs** | ✅ | ❌ | ✅ | ❌ |
+| **View Published Articles** | ✅ | ✅ | ✅ | ✅ *(Published Only)* |
 | **Create & Edit Articles** | ❌ | ✅ | ✅ | ❌ |
-| **Run Article QA & Fact Check** | ✅ | ✅ | ✅ | ❌ |
-| **Log & Manage Bugs** | ✅ | ✅ | ✅ | ❌ |
+| **Validate Article & Export (.PDF/.DOCX/.TXT)** | ✅ | ✅ | ✅ | ✅ *(Modal View)* |
+| **Create & Edit Test Cases** | ✅ | ❌ | ✅ | ❌ |
+| **Execute Test Runs** | ✅ | ❌ | ✅ | ❌ |
+| **Log, Edit & Delete Bugs** | ✅ | ❌ | ❌ | ❌ |
 | **View Reports & Metrics** | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
 ## 🎨 9-Color Deep Abyssal Oceanic Design System
 
-Guard AI features a high-contrast theme engineered specifically for long QA sessions and data-dense dashboards:
+NewsQA features a high-contrast theme engineered specifically for long QA sessions and data-dense dashboards:
 
 | UI Role | Color Name | Hex Code | Visual Application |
 | :--- | :--- | :--- | :--- |
@@ -141,10 +147,10 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | :--- | :--- | :--- | :--- |
 | `/api/test-cases` | `GET` / `POST` | List or author test cases | Public / QA, Admin |
 | `/api/test-cases/[id]` | `GET` / `PUT` / `DELETE` | Retrieve, update, or remove test case | QA, Admin |
-| `/api/articles` | `GET` / `POST` | List or publish news articles | Public / Editor, Admin |
-| `/api/articles/[id]` | `GET` / `PUT` / `DELETE` | Retrieve, update, or remove news article | Editor, Admin |
-| `/api/bugs` | `GET` / `POST` | List or log system defects | Authenticated |
-| `/api/bugs/[id]` | `GET` / `PUT` | Retrieve or update bug state | Authenticated |
+| `/api/articles` | `GET` / `POST` | List or publish news articles | Authenticated (Viewer receives Published only) / Editor, Admin |
+| `/api/articles/[id]` | `GET` / `PUT` / `DELETE` | Retrieve, update, or remove news article | Editor, Admin (Viewer receives Published only) |
+| `/api/bugs` | `GET` / `POST` | List or log system defects | Authenticated / QA Only for POST |
+| `/api/bugs/[id]` | `GET` / `PUT` / `DELETE` | Retrieve, update, or remove bug state | Authenticated / QA Only for PUT & DELETE |
 | `/api/test-runs` | `GET` / `POST` | View or execute test runs | QA, Admin |
 | `/api/ai/generate-tests`| `POST` | Generate test cases from prompt via Gemini | Authenticated |
 | `/api/ai/fact-check` | `POST` | Scan article content & verify claims | Authenticated |
@@ -159,12 +165,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 Run the unit test suite covering RBAC rules, validators, and article quality checks:
 ```bash
 npx vitest run
-```
-
-### End-to-End Tests (Playwright)
-Run the end-to-end browser automation suite:
-```bash
-npx playwright test
 ```
 
 ---

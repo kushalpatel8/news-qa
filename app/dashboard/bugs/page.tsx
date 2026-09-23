@@ -31,7 +31,7 @@ export default async function BugsPage() {
             Track and manage your bugs and issues.
           </p>
         </div>
-        <RoleGate roles={["ADMIN", "QA"]}>
+        <RoleGate roles={["QA"]}>
           <Link
             href="/dashboard/bugs/new"
             className="flex items-center gap-1.5 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"

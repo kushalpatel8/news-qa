@@ -137,7 +137,7 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
             </select>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#1E3A5F]">
+          <div className="flex flex-wrap justify-end gap-3 pt-4 border-t border-[#1E3A5F]">
             <button
               type="button"
               onClick={() => router.push("/dashboard/articles")}
@@ -146,11 +146,26 @@ export default function ArticleForm({ initialData }: ArticleFormProps) {
               Cancel
             </button>
             <button
-              type="submit"
+              type="button"
               disabled={isSubmitting}
-              className="px-4 py-2 text-xs font-bold rounded-md bg-[#00E676] text-[#070F1E] hover:bg-[#00c865] transition disabled:opacity-50"
+              onClick={() => {
+                setValue("status", "DRAFT");
+                handleSubmit(onSubmit)();
+              }}
+              className="px-4 py-2 text-xs font-semibold rounded-md border border-[#00E5FF]/40 text-[#00E5FF] hover:bg-[#00E5FF]/10 transition disabled:opacity-50"
             >
-              {isSubmitting ? "Saving..." : "Save Article"}
+              Save as Draft
+            </button>
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => {
+                setValue("status", "PUBLISHED");
+                handleSubmit(onSubmit)();
+              }}
+              className="px-4 py-2 text-xs font-bold rounded-md bg-[#00E676] text-[#070F1E] hover:bg-[#00c865] transition disabled:opacity-50 flex items-center gap-1.5"
+            >
+              🚀 {isSubmitting ? "Publishing..." : "Publish Article"}
             </button>
           </div>
         </form>

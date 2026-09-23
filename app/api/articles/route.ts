@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import connectToDatabase from "@/lib/mongodb/connection";
 import { Article } from "@/lib/mongodb/models/Article";
 import { articleSchema } from "@/lib/validators/article.validator";
@@ -20,19 +20,33 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const user = await currentUser();
+    const role = user?.publicMetadata?.role as string;
+    const isViewer = role === "VIEWER";
+
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const skip = (page - 1) * limit;
 
     await connectToDatabase();
+
+    const query: any = {};
+    if (isViewer) {
+      query.status = "PUBLISHED";
+    } else {
+      const statusParam = searchParams.get("status");
+      if (statusParam) {
+        query.status = statusParam;
+      }
+    }
     
-    const articles = await Article.find()
+    const articles = await Article.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
       
-    const total = await Article.countDocuments();
+    const total = await Article.countDocuments(query);
 
     return NextResponse.json({
       data: articles,

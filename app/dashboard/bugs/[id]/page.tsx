@@ -1,13 +1,30 @@
 import BugForm from "@/components/bugs/BugForm";
-import { notFound } from "next/navigation";
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect, notFound } from "next/navigation";
+
+import connectToDatabase from "@/lib/mongodb/connection";
+import { Bug } from "@/lib/mongodb/models/Bug";
 
 async function getBug(id: string) {
-  const res = await fetch(`http://localhost:3000/api/bugs/${id}`, { cache: "no-store" });
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    await connectToDatabase();
+    const bug = await Bug.findById(id).lean();
+    if (!bug) return null;
+    return JSON.parse(JSON.stringify(bug));
+  } catch {
+    return null;
+  }
 }
 
 export default async function EditBugPage({ params }: { params: Promise<{ id: string }> }) {
+  const user = await currentUser();
+  const rawRole = (user?.publicMetadata?.role as string) || "GUEST";
+  const isQA = rawRole === "QA" || rawRole === "QA_ENGINEER";
+
+  if (!isQA) {
+    redirect("/dashboard/bugs");
+  }
+
   const resolvedParams = await params;
   const bug = await getBug(resolvedParams.id);
 

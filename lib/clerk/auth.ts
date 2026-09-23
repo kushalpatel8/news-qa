@@ -9,8 +9,8 @@ export async function getCurrentRole(): Promise<Role | undefined> {
   // Custom role is stored in Clerk's publicMetadata
   const role = user.publicMetadata?.role as Role | undefined;
   
-  // Default to VIEWER if not set
-  return role || "VIEWER";
+  // Default to QA_ENGINEER if not set
+  return role || "QA_ENGINEER";
 }
 
 export async function checkPermission(allowedRoles: Role[]) {

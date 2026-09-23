@@ -16,11 +16,20 @@ async function getArticle(id: string) {
   }
 }
 
+import { currentUser } from "@clerk/nextjs/server";
+
 export default async function EditArticlePage({ params }: { params: Promise<{ id: string }> }) {
+  const user = await currentUser();
+  const role = user?.publicMetadata?.role as string;
+
   const resolvedParams = await params;
   const article = await getArticle(resolvedParams.id);
 
   if (!article) {
+    notFound();
+  }
+
+  if (role === "VIEWER" && article.status !== "PUBLISHED") {
     notFound();
   }
 

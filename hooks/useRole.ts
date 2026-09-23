@@ -7,7 +7,6 @@ const ROLE_WRITE_PERMISSIONS: Record<UserRole, Resource[]> = {
   ADMIN: [
     "ARTICLES",
     "TEST_CASES",
-    "BUGS",
     "REPORTS",
     "AI_TESTING",
     "API_TESTING",
@@ -21,7 +20,8 @@ const ROLE_WRITE_PERMISSIONS: Record<UserRole, Resource[]> = {
 
 export function useRole() {
   const { user, isLoaded } = useUser();
-  const role = (user?.publicMetadata?.role as UserRole) ?? null;
+  const rawRole = (user?.publicMetadata?.role as string) ?? null;
+  const role: UserRole | null = rawRole === "QA_ENGINEER" ? "QA" : (rawRole as UserRole | null);
 
   const isAdmin = role === "ADMIN";
   const isQA = role === "QA";

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, Download, X, User, Calendar, FileText } from "lucide-react";
 
 interface Article {
   _id: string;
@@ -17,7 +18,122 @@ interface Article {
   createdAt?: string;
 }
 
-function ValidationResults({ article }: { article: Article }) {
+function downloadTxt(article: Article) {
+  const title = article.title || "Untitled Article";
+  const author = article.author || "Unknown Author";
+  const category = article.category || "General";
+  const dateStr = article.publishedAt ? format(new Date(article.publishedAt), "PPP") : "N/A";
+
+  const text = `TITLE: ${title}\nAUTHOR: ${author}\nCATEGORY: ${category}\nDATE: ${dateStr}\nSTATUS: ${article.status || "PUBLISHED"}\n\n========================================\nCONTENT\n========================================\n\n${article.content || ""}`;
+
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const slugName = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+  a.download = `${slugName}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function downloadDocx(article: Article) {
+  const title = article.title || "Untitled Article";
+  const author = article.author || "Unknown Author";
+  const category = article.category || "General";
+  const dateStr = article.publishedAt ? format(new Date(article.publishedAt), "PPP") : "N/A";
+  const content = (article.content || "").replace(/\n/g, "<br/>");
+
+  const htmlString = `
+    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+    <head>
+      <meta charset='utf-8'>
+      <title>${title}</title>
+      <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; color: #1e293b; }
+        h1 { color: #0f172a; font-size: 22pt; margin-bottom: 8pt; border-bottom: 2px solid #00E676; padding-bottom: 6pt; }
+        .meta { color: #64748b; font-size: 11pt; margin-bottom: 24pt; }
+        .content { font-size: 12pt; line-height: 1.7; color: #334155; }
+      </style>
+    </head>
+    <body>
+      <h1>${title}</h1>
+      <div class="meta">
+        <p><strong>Author:</strong> ${author} &nbsp;|&nbsp; <strong>Category:</strong> ${category} &nbsp;|&nbsp; <strong>Date:</strong> ${dateStr}</p>
+      </div>
+      <div class="content">
+        ${content}
+      </div>
+    </body>
+    </html>
+  `;
+
+  const blob = new Blob(['\ufeff' + htmlString], {
+    type: 'application/msword'
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const slugName = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+  a.download = `${slugName}.docx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function downloadPdf(article: Article) {
+  const title = article.title || "Untitled Article";
+  const author = article.author || "Unknown Author";
+  const category = article.category || "General";
+  const dateStr = article.publishedAt ? format(new Date(article.publishedAt), "PPP") : "N/A";
+  const content = (article.content || "").replace(/\n/g, "<br/>");
+
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) return;
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>${title}</title>
+        <style>
+          @page { size: A4; margin: 20mm; }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; color: #0f172a; }
+          h1 { font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 12px; border-bottom: 3px solid #00E676; padding-bottom: 8px; }
+          .meta { font-size: 13px; color: #64748b; margin-bottom: 24px; background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0; }
+          .content { font-size: 14px; line-height: 1.8; color: #334155; }
+        </style>
+      </head>
+      <body>
+        <h1>${title}</h1>
+        <div class="meta">
+          <strong>Author:</strong> ${author} &nbsp;•&nbsp; 
+          <strong>Category:</strong> ${category} &nbsp;•&nbsp; 
+          <strong>Published:</strong> ${dateStr}
+        </div>
+        <div class="content">${content}</div>
+        <script>
+          window.onload = function() {
+            window.print();
+          };
+        </script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
+function ValidationResults({
+  article,
+  isViewer,
+  onOpenModal,
+}: {
+  article: Article;
+  isViewer?: boolean;
+  onOpenModal?: () => void;
+}) {
   const content = article.content || "";
   const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
   const urlMatches = content.match(/https?:\/\/[^\s]+/g) || [];
@@ -83,26 +199,78 @@ function ValidationResults({ article }: { article: Article }) {
         ))}
       </div>
 
-      <Link
-        href={`/dashboard/articles/${article._id}`}
-        className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold text-[#070F1E] bg-[#00E676] hover:bg-[#00c865] transition shadow-md"
-      >
-        Validate Article
-      </Link>
+      {isViewer ? (
+        <button
+          type="button"
+          onClick={onOpenModal}
+          className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold text-[#070F1E] bg-[#00E676] hover:bg-[#00c865] transition shadow-md"
+        >
+          Validate Article
+        </button>
+      ) : (
+        <Link
+          href={`/dashboard/articles/${article._id}`}
+          className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold text-[#070F1E] bg-[#00E676] hover:bg-[#00c865] transition shadow-md"
+        >
+          Validate Article
+        </Link>
+      )}
     </div>
   );
 }
 
-export default function ArticleListWithValidation({ articles }: { articles: Article[] }) {
-  const [selected, setSelected] = useState<Article | null>(articles[0] ?? null);
+export default function ArticleListWithValidation({
+  articles,
+  initialStatus,
+  isViewer = false,
+}: {
+  articles: Article[];
+  initialStatus?: string;
+  isViewer?: boolean;
+}) {
+  const router = useRouter();
+  const [filter, setFilter] = useState<string>(isViewer ? "PUBLISHED" : (initialStatus || "ALL"));
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
+  const filteredArticles = articles.filter((a) => {
+    if (isViewer) return a.status === "PUBLISHED";
+    if (filter === "PUBLISHED") return a.status === "PUBLISHED";
+    if (filter === "DRAFT") return a.status === "DRAFT";
+    return true;
+  });
+
+  const [selected, setSelected] = useState<Article | null>(filteredArticles[0] ?? articles[0] ?? null);
+
+  const handleTogglePublish = async (art: Article) => {
+    if (isViewer) return;
+    setIsUpdatingStatus(true);
+    try {
+      const nextStatus = art.status === "PUBLISHED" ? "DRAFT" : "PUBLISHED";
+      const res = await fetch(`/api/articles/${art._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...art,
+          status: nextStatus,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update article status");
+      const updated = await res.json();
+      setSelected(updated);
+      router.refresh();
+    } catch (err: any) {
+      alert("Error updating status: " + err.message);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
 
   if (articles.length === 0) {
     return (
       <div className="card py-20 text-center">
-        <p className="text-sm text-[#88A4C4]">No articles found.</p>
-        <Link href="/dashboard/articles/new" className="mt-2 inline-block text-xs font-semibold text-[#00E676] hover:underline">
-          Create your first article →
-        </Link>
+        <p className="text-sm text-[#88A4C4]">No published articles found.</p>
       </div>
     );
   }
@@ -114,33 +282,67 @@ export default function ArticleListWithValidation({ articles }: { articles: Arti
         <h3 className="text-sm font-semibold mb-1 text-[#E2F1FF]">
           Article Details
         </h3>
-        <p className="text-xs mb-4 text-[#88A4C4]">
-          Review and validate articles for quality and accuracy.
+        <p className="text-xs mb-3 text-[#88A4C4]">
+          {isViewer
+            ? "Viewing published news articles."
+            : "Review and validate articles for quality and accuracy."}
         </p>
 
-        {/* Article list */}
-        <div className="space-y-2 mb-5">
-          {articles.slice(0, 8).map((a) => {
-            const isSelected = selected?._id === a._id;
-            return (
+        {/* Status filter tabs */}
+        {!isViewer && (
+          <div className="flex gap-2 mb-4 border-b border-[#1E3A5F] pb-3">
+            {[
+              { id: "ALL", label: "All Articles" },
+              { id: "PUBLISHED", label: "Published" },
+              { id: "DRAFT", label: "Drafts" },
+            ].map((st) => (
               <button
-                key={a._id}
-                onClick={() => setSelected(a)}
-                className={`w-full text-left px-3 py-2.5 rounded-lg text-xs transition border ${
-                  isSelected
-                    ? "bg-[#00E676]/20 border-[#00E676] text-[#E2F1FF]"
-                    : "bg-[#13253B] border-[#1E3A5F] text-[#E2F1FF] hover:bg-[#1E3A5F]"
+                key={st.id}
+                onClick={() => {
+                  setFilter(st.id);
+                  const nextList = articles.filter(a => st.id === "ALL" || a.status === st.id);
+                  if (nextList.length > 0) setSelected(nextList[0]);
+                }}
+                className={`px-3 py-1 rounded-md text-xs font-semibold transition border ${
+                  filter === st.id
+                    ? "bg-[#00E676] text-[#070F1E] border-[#00E676]"
+                    : "bg-[#13253B] text-[#88A4C4] border-[#1E3A5F] hover:text-[#E2F1FF]"
                 }`}
               >
-                <div className="truncate font-semibold text-[#E2F1FF]">{a.title}</div>
-                <div className="mt-0.5 flex gap-2 text-[#88A4C4]">
-                  <span>{a.category || "Uncategorized"}</span>
-                  {a.author && <span>· {a.author}</span>}
-                </div>
+                {st.label}
               </button>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
+
+        {/* Article list */}
+        {filteredArticles.length === 0 ? (
+          <p className="text-xs text-[#88A4C4] py-6 text-center">No published articles found.</p>
+        ) : (
+          <div className="space-y-2 mb-5">
+            {filteredArticles.slice(0, 8).map((a) => {
+              const isSelected = selected?._id === a._id;
+              return (
+                <button
+                  key={a._id}
+                  onClick={() => setSelected(a)}
+                  className={`w-full text-left px-3 py-2.5 rounded-lg text-xs transition border ${
+                    isSelected
+                      ? "bg-[#00E676]/20 border-[#00E676] text-[#E2F1FF]"
+                      : "bg-[#13253B] border-[#1E3A5F] text-[#E2F1FF] hover:bg-[#1E3A5F]"
+                  }`}
+                >
+                  <div className="truncate font-semibold text-[#E2F1FF]">{a.title}</div>
+                  <div className="mt-0.5 flex gap-2 text-[#88A4C4]">
+                    <span>{a.category || "Uncategorized"}</span>
+                    {a.author && <span>· {a.author}</span>}
+                    {a.status && <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#1E3A5F]">{a.status}</span>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Selected article preview */}
         {selected && (
@@ -172,12 +374,177 @@ export default function ArticleListWithValidation({ articles }: { articles: Arti
                 </p>
               </div>
             )}
+
+            {isViewer ? (
+              <div className="flex items-center justify-between pt-3 border-t border-[#1E3A5F] flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(true)}
+                  className="px-4 py-2 rounded-lg text-xs font-bold text-[#070F1E] bg-[#00E676] hover:bg-[#00c865] transition shadow-md flex items-center gap-1.5"
+                >
+                  <FileText size={14} /> View & Validate Article
+                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    title="Download as TXT"
+                    onClick={() => downloadTxt(selected)}
+                    className="px-2 py-1 rounded text-[11px] font-semibold text-[#88A4C4] bg-[#13253B] border border-[#1E3A5F] hover:text-[#E2F1FF] hover:border-[#00E676] transition flex items-center gap-1"
+                  >
+                    <Download size={11} /> TXT
+                  </button>
+                  <button
+                    type="button"
+                    title="Download as DOCX"
+                    onClick={() => downloadDocx(selected)}
+                    className="px-2 py-1 rounded text-[11px] font-semibold text-[#88A4C4] bg-[#13253B] border border-[#1E3A5F] hover:text-[#E2F1FF] hover:border-[#00E5FF] transition flex items-center gap-1"
+                  >
+                    <Download size={11} /> DOCX
+                  </button>
+                  <button
+                    type="button"
+                    title="Download as PDF"
+                    onClick={() => downloadPdf(selected)}
+                    className="px-2 py-1 rounded text-[11px] font-bold text-[#070F1E] bg-[#00E676] hover:bg-[#00c865] transition flex items-center gap-1"
+                  >
+                    <Download size={11} /> PDF
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between pt-3 border-t border-[#1E3A5F]">
+                <button
+                  type="button"
+                  disabled={isUpdatingStatus}
+                  onClick={() => handleTogglePublish(selected)}
+                  className={`px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1.5 ${
+                    selected.status === "PUBLISHED"
+                      ? "bg-[#13253B] border border-[#1E3A5F] text-[#88A4C4] hover:text-[#E2F1FF]"
+                      : "bg-[#00E676] text-[#070F1E] hover:bg-[#00c865]"
+                  }`}
+                >
+                  {selected.status === "PUBLISHED" ? "Revert to Draft" : "🚀 Publish Article Now"}
+                </button>
+                <Link
+                  href={`/dashboard/articles/${selected._id}`}
+                  className="text-xs font-semibold text-[#00E5FF] hover:underline"
+                >
+                  Edit Full Article →
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* Validation Panel */}
-      {selected && <ValidationResults article={selected} />}
+      {selected && (
+        <ValidationResults
+          article={selected}
+          isViewer={isViewer}
+          onOpenModal={() => setShowModal(true)}
+        />
+      )}
+
+      {/* Article Dialog Modal */}
+      {showModal && selected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="bg-[#0B1727] border border-[#1E3A5F] rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-[#1E3A5F] flex items-center justify-between bg-[#13253B]">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-[#00E676]" />
+                <h2 className="text-base font-bold text-[#E2F1FF]">Article Details & Validation</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="p-1.5 rounded-lg text-[#88A4C4] hover:text-[#E2F1FF] hover:bg-[#1E3A5F] transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-5 flex-1 text-xs">
+              {/* Title */}
+              <div>
+                <span className="text-[#88A4C4] text-[11px] font-semibold uppercase tracking-wider">Title</span>
+                <h1 className="text-xl font-bold text-[#E2F1FF] mt-1">{selected.title}</h1>
+              </div>
+
+              {/* Author & Metadata Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-[#13253B] border border-[#1E3A5F]">
+                <div>
+                  <span className="text-[#88A4C4] text-[10px] uppercase font-semibold">Author Name</span>
+                  <div className="flex items-center gap-1.5 text-[#E2F1FF] font-semibold mt-1">
+                    <User className="w-3.5 h-3.5 text-[#00E676]" />
+                    <span>{selected.author || "Unknown Author"}</span>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[#88A4C4] text-[10px] uppercase font-semibold">Category</span>
+                  <p className="text-[#E2F1FF] font-semibold mt-1">{selected.category || "General"}</p>
+                </div>
+                <div>
+                  <span className="text-[#88A4C4] text-[10px] uppercase font-semibold">Publication Date</span>
+                  <div className="flex items-center gap-1.5 text-[#E2F1FF] font-semibold mt-1">
+                    <Calendar className="w-3.5 h-3.5 text-[#00E5FF]" />
+                    <span>{selected.publishedAt ? format(new Date(selected.publishedAt), "MMM d, yyyy") : "N/A"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Article Content */}
+              <div>
+                <span className="text-[#88A4C4] text-[11px] font-semibold uppercase tracking-wider block mb-2">Content</span>
+                <div className="p-4 rounded-xl bg-[#070F1E] border border-[#1E3A5F] text-[#88A4C4] text-xs leading-relaxed whitespace-pre-wrap max-h-72 overflow-y-auto">
+                  {selected.content || "No content available."}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-[#1E3A5F] bg-[#13253B] flex items-center justify-between flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 rounded-lg text-xs font-semibold text-[#88A4C4] hover:text-[#E2F1FF] border border-[#1E3A5F] hover:bg-[#1E3A5F] transition"
+              >
+                Close
+              </button>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[#88A4C4] text-[11px] font-semibold mr-1">Download:</span>
+                <button
+                  type="button"
+                  onClick={() => downloadTxt(selected)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-[#E2F1FF] bg-[#070F1E] border border-[#1E3A5F] hover:bg-[#1E3A5F] hover:border-[#00E676] transition"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#00E676]" />
+                  .TXT
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadDocx(selected)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-[#E2F1FF] bg-[#070F1E] border border-[#1E3A5F] hover:bg-[#1E3A5F] hover:border-[#00E5FF] transition"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#00E5FF]" />
+                  .DOCX
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadPdf(selected)}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-[#070F1E] bg-[#00E676] hover:bg-[#00c865] transition shadow-md"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  .PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

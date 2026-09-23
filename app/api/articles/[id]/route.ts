@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import connectToDatabase from "@/lib/mongodb/connection";
 import { Article } from "@/lib/mongodb/models/Article";
 import { articleSchema } from "@/lib/validators/article.validator";
@@ -12,6 +12,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const user = await currentUser();
+    const role = user?.publicMetadata?.role as string;
+
     await connectToDatabase();
     
     const resolvedParams = await params;
@@ -19,6 +22,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
     if (!article) {
       return NextResponse.json({ error: "Article not found" }, { status: 404 });
+    }
+
+    if (role === "VIEWER" && article.status !== "PUBLISHED") {
+      return NextResponse.json({ error: "Forbidden: Viewers can only access published articles" }, { status: 403 });
     }
 
     return NextResponse.json(article);

@@ -20,7 +20,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Guard AI",
+  title: "News QA",
   description: "AI based Test case generation for QA and Editor News Portal",
 };
 

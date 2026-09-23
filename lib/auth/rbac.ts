@@ -40,7 +40,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Resource[]> = {
     "UI_TESTING",
   ],
   // VIEWER has read access to these pages; write is blocked at API layer
-  VIEWER: ["REPORTS", "TEST_CASES", "BUGS"],
+  VIEWER: ["REPORTS", "TEST_CASES", "BUGS", "ARTICLES"],
 };
 
 // ─── Write-level access (who can mutate a resource) ───────────────────────────
@@ -49,7 +49,6 @@ const ROLE_WRITE_PERMISSIONS: Record<UserRole, Resource[]> = {
   ADMIN: [
     "ARTICLES",
     "TEST_CASES",
-    "BUGS",
     "REPORTS",
     "AI_TESTING",
     "API_TESTING",
@@ -63,13 +62,21 @@ const ROLE_WRITE_PERMISSIONS: Record<UserRole, Resource[]> = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/** Helper to normalize role strings */
+function normalizeRole(role: string | null | undefined): UserRole | null {
+  if (!role) return null;
+  if (role === "QA_ENGINEER") return "QA";
+  return role as UserRole;
+}
+
 /** Returns true if the role has read (page) access to the resource. */
 export function hasAccess(
   role: string | null | undefined,
   resource: Resource
 ): boolean {
-  if (!role) return false;
-  const permissions = ROLE_PERMISSIONS[role as UserRole];
+  const norm = normalizeRole(role);
+  if (!norm) return false;
+  const permissions = ROLE_PERMISSIONS[norm];
   return permissions ? permissions.includes(resource) : false;
 }
 
@@ -78,8 +85,9 @@ export function canWrite(
   role: string | null | undefined,
   resource: Resource
 ): boolean {
-  if (!role) return false;
-  const permissions = ROLE_WRITE_PERMISSIONS[role as UserRole];
+  const norm = normalizeRole(role);
+  if (!norm) return false;
+  const permissions = ROLE_WRITE_PERMISSIONS[norm];
   return permissions ? permissions.includes(resource) : false;
 }
 
@@ -91,7 +99,8 @@ export function canWrite(
  */
 export async function enforceAccess(resource: Resource) {
   const user = await currentUser();
-  const role = user?.publicMetadata?.role as string;
+  const rawRole = user?.publicMetadata?.role as string;
+  const role = normalizeRole(rawRole);
 
   if (!hasAccess(role, resource)) {
     if (role === "EDITOR") {
@@ -123,8 +132,10 @@ export async function requireRole(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Clerk stores publicMetadata under sessionClaims
-  const role = (sessionClaims?.metadata as any)?.role as UserRole | undefined;
+  // Clerk stores publicMetadata under sessionClaims or currentUser
+  const user = await currentUser();
+  const rawRole = (sessionClaims?.metadata as any)?.role || (user?.publicMetadata?.role as string);
+  const role = normalizeRole(rawRole);
 
   if (!role || !allowedRoles.includes(role)) {
     return NextResponse.json(

@@ -50,7 +50,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const roleOrError = await requireRole(["ADMIN", "QA"]);
+    const roleOrError = await requireRole(["QA"]);
     if (roleOrError instanceof NextResponse) return roleOrError;
 
     const { userId } = await auth();

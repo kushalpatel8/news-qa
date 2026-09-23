@@ -29,6 +29,33 @@ export default function BugForm({ initialData }: { initialData?: BugFormValues &
     },
   });
 
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteBug = async () => {
+    if (!initialData?._id) return;
+    if (!confirm("Are you sure you want to delete this bug?")) return;
+
+    setIsDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/bugs/${initialData._id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete bug");
+      }
+
+      router.push("/dashboard/bugs");
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const onSubmit = async (data: BugFormValues) => {
     setIsSubmitting(true);
     setError(null);
@@ -132,11 +159,25 @@ export default function BugForm({ initialData }: { initialData?: BugFormValues &
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 pt-4 border-t border-[#1E3A5F]">
-        <button type="button" onClick={() => router.push("/dashboard/bugs")} className="px-4 py-2 text-xs font-semibold rounded-md border border-[#1E3A5F] text-[#88A4C4] hover:bg-[#13253B] transition">Cancel</button>
-        <button type="submit" disabled={isSubmitting} className="px-4 py-2 text-xs font-bold rounded-md bg-[#00E676] text-[#070F1E] hover:bg-[#00c865] transition disabled:opacity-50">
-          {isSubmitting ? "Saving..." : "Save Bug"}
-        </button>
+      <div className="flex items-center justify-between pt-4 border-t border-[#1E3A5F]">
+        {initialData?._id ? (
+          <button
+            type="button"
+            disabled={isDeleting || isSubmitting}
+            onClick={handleDeleteBug}
+            className="px-4 py-2 text-xs font-bold rounded-md bg-rose-600/20 text-rose-400 border border-rose-500/30 hover:bg-rose-600 hover:text-white transition disabled:opacity-50"
+          >
+            {isDeleting ? "Deleting..." : "🗑 Delete Bug"}
+          </button>
+        ) : (
+          <div />
+        )}
+        <div className="flex gap-3">
+          <button type="button" onClick={() => router.push("/dashboard/bugs")} className="px-4 py-2 text-xs font-semibold rounded-md border border-[#1E3A5F] text-[#88A4C4] hover:bg-[#13253B] transition">Cancel</button>
+          <button type="submit" disabled={isSubmitting || isDeleting} className="px-4 py-2 text-xs font-bold rounded-md bg-[#00E676] text-[#070F1E] hover:bg-[#00c865] transition disabled:opacity-50">
+            {isSubmitting ? "Saving..." : "Save Bug"}
+          </button>
+        </div>
       </div>
     </form>
   );
